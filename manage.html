@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>إدارة محتوى البوت</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #f1f8e9);
+      padding: 30px;
+      direction: rtl;
+    }
+    h1 {
+      text-align: center;
+      color: #2e7d32;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+    .section {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 700px;
+      margin: auto;
+    }
+    label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
+    input, select, textarea {
+      padding: 10px; margin-top: 5px; width: 100%;
+      border: 1px solid #ccc; border-radius: 8px; font-size: 15px;
+      background-color: #f9f9f9; transition: border-color 0.3s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #4caf50; outline: none; background-color: #fff; }
+    textarea { resize: vertical; }
+    button {
+      background: #4caf50; color: #fff; border: none;
+      padding: 12px 24px; border-radius: 8px; margin-top: 20px;
+      cursor: pointer; font-size: 16px; transition: background 0.3s;
+    }
+    button:hover { background: #388e3c; }
+    .button-group { display: flex; justify-content: space-between; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <!-- مربع عرض عدد المستخدمين -->
+<div id="statsBox" style="margin:20px auto; padding:15px; border:1px solid #ccc; border-radius:8px; background:#f9f9f9; max-width:700px; text-align:center; font-size:18px;">
+  📊 عدد المستخدمين: <span id="userCount">0</span>
+  <button onclick="loadStats()">تحديث الإحصائيات</button>
+</div>
+
+  <h1>🛠 إدارة محتوى البوت</h1>
+  <div class="section">
+    <label>الصف:</label>
+    <select id="grade">
+      <option>الصف السابع</option><option>الصف الثامن</option>
+      <option>الصف التاسع</option><option>الصف العاشر</option>
+      <option>الصف الحادي عشر</option><option>البكالوريا</option>
+    </select>
+
+    <label>نوع المحتوى:</label>
+    <select id="mainOption" onchange="updateFields()">
+      <option>📘 شرح المنهاج</option>
+      <option>📝 أوراق عمل</option>
+      <option>📚 كتب + دليل</option>
+      <option>❓ أسئلة الدورات</option>
+    </select>
+
+    <div id="sectionField">
+      <label>القسم:</label>
+      <select id="section"><option>الجبر</option><option>الهندسة</option></select>
+    </div>
+
+    <div id="unitField">
+      <label>رقم الوحدة:</label>
+      <input type="number" id="unit" min="1">
+    </div>
+
+    <div id="lessonField">
+      <label>رقم الدرس:</label>
+      <input type="number" id="lesson" min="1">
+    </div>
+
+    <div id="bookGuideField">
+      <label>اختر:</label>
+      <select id="bookGuide"><option>الكتاب</option><option>الدليل</option></select>
+    </div>
+
+    <div id="examYearField">
+      <label>سنة الدورة:</label>
+      <input type="text" id="examYear" placeholder="مثال: دورة 2024">
+    </div>
+
+    <label>نص يظهر للمستخدم (اختياري):</label>
+    <textarea id="text" rows="3"></textarea>
+
+    <label>رابط خارجي (اختياري):</label>
+    <input type="url" id="link">
+
+    <label>رفع ملف (PDF/Video):</label>
+    <input type="file" id="file">
+
+    <div class="button-group">
+      <button onclick="submitContent()">💾 حفظ المحتوى</button>
+      <button onclick="deleteContent()">🗑 حذف هذا المحتوى</button>
+      <button onclick="resetBot()">🔄 إعادة ضبط البوت</button>
+    </div>
+  </div>
+
+  <script>
+    function updateFields() {
+      const mainOption = document.getElementById("mainOption").value;
+      document.getElementById("sectionField").style.display = "none";
+      document.getElementById("unitField").style.display = "none";
+      document.getElementById("lessonField").style.display = "none";
+      document.getElementById("bookGuideField").style.display = "none";
+      document.getElementById("examYearField").style.display = "none";
+
+      if (mainOption === "📘 شرح المنهاج") {
+        document.getElementById("sectionField").style.display = "block";
+        document.getElementById("unitField").style.display = "block";
+        document.getElementById("lessonField").style.display = "block";
+      } else if (mainOption === "📝 أوراق عمل") {
+        document.getElementById("sectionField").style.display = "block";
+        document.getElementById("unitField").style.display = "block";
+      } else if (mainOption === "📚 كتب + دليل") {
+        document.getElementById("sectionField").style.display = "block";
+        document.getElementById("bookGuideField").style.display = "block";
+      } else if (mainOption === "❓ أسئلة الدورات") {
+        document.getElementById("examYearField").style.display = "block";
+      }
+    }
+
+    function buildKey() {
+      const grade = document.getElementById("grade").value;
+      const mainOption = document.getElementById("mainOption").value;
+      const section = document.getElementById("section").value;
+      const unit = document.getElementById("unit").value;
+      const lesson = document.getElementById("lesson").value;
+      const bookGuide = document.getElementById("bookGuide").value;
+      const examYear = document.getElementById("examYear").value;
+
+      let keyParts = [grade, mainOption];
+
+      if (mainOption === "📘 شرح المنهاج") {
+        keyParts.push(section);
+        if (unit) keyParts.push(`الوحدة ${unit}`);
+        if (lesson) keyParts.push(`الدرس ${lesson}`);
+      } else if (mainOption === "📝 أوراق عمل") {
+        keyParts.push(section);
+        if (unit) keyParts.push(`الوحدة ${unit}`);
+      } else if (mainOption === "📚 كتب + دليل") {
+        keyParts.push(section);
+        keyParts.push(bookGuide);
+      } else if (mainOption === "❓ أسئلة الدورات") {
+        if (examYear) keyParts.push(examYear);
+      }
+
+      return keyParts.join(".");
+    }
+
+    async function submitContent() {
+      const key = buildKey();
+      const text = document.getElementById("text").value;
+      const link = document.getElementById("link").value;
+      const file = document.getElementById("file").files[0];
+
+      const formData = new FormData();
+      formData.append("key", key);
+      if (text) formData.append("text", text);
+      if (link) formData.append("link", link);
+      if (file) formData.append("file", file);
+
+      try {
+        const res = await fetch("http://127.0.0.1:5000/manage", { method: "POST", body: formData });
+        const data = await res.json();
+        alert(data.message);
+      } catch (err) {
+        alert("⚠️ فشل الاتصال بالسيرفر");
+      }
+    }
+
+    async function deleteContent() {
+      const key = buildKey();
+      try {
+        const res = await fetch("http://127.0.0.1:5000/manage", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key })
+        });
+        const data = await res.json();
+        alert(data.message);
+      } catch (err) {
+        alert("⚠️ فشل الاتصال بالسيرفر");
+      }
+    }
+
+    async function resetBot() {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/reset", { method: "POST" });
+        const data = await res.json();
+        alert(data.message);
+      } catch (err) {
+        alert("⚠️ فشل الاتصال بالسيرفر");
+      }
+    }
+  async function loadStats() {
+    try {
+      const res = await fetch("http://127.0.0.1:5000/stats");
+      const data = await res.json();
+      document.getElementById("userCount").textContent = data.count;
+    } catch (err) {
+      alert("⚠️ فشل الاتصال بالسيرفر");
+    }
+  }
+  window.onload = function() {
+    updateFields();   // موجودة سابقًا لتنظيم الحقول حسب الخيار
+    loadStats();      // جلب وعرض عدد المستخدمين عند فتح الصفحة
+  }
+
+  </script>
+</body>
+</html
