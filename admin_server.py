@@ -144,10 +144,10 @@ def stats():
 @app.route("/")
 def index():
     return send_from_directory(BASE_DIR, "manage.html")
-
 if __name__ == "__main__":
-app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
 
 
 # ======================= نقطة النهاية: admin_server.py =======================
+
 
