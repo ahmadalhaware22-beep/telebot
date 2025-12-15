@@ -326,13 +326,17 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await deliver_content(update, tentative_key)
     else:
         return await update.message.reply_text("⚠️ لا يوجد محتوى لهذا الخيار حالياً.")
-
 # تشغيل البوت
 def main():
-    app = Application.builder().token("8317697205:AAE1e_0oiPAMDOmnK8BctKABgHYtR9bIqjU").build()
+    token = os.environ.get("BOT_TOKEN")
+    if not token:
+        raise ValueError("❌ BOT_TOKEN غير موجود في Environment Variables")
+
+    app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
     app.run_polling()
 
 if __name__ == "__main__":
     main()
+
