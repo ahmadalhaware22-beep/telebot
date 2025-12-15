@@ -171,18 +171,18 @@
       if (file) formData.append("file", file);
 
       try {
-        const res = await fetch("http://127.0.0.1:5000/manage", { method: "POST", body: formData });
+        const res = await fetch("/manage", { method: "POST", body: formData });
         const data = await res.json();
         alert(data.message);
       } catch (err) {
         alert("⚠️ فشل الاتصال بالسيرفر");
       }
     }
-
+    
     async function deleteContent() {
       const key = buildKey();
       try {
-        const res = await fetch("http://127.0.0.1:5000/manage", {
+        const res = await fetch("/manage", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key })
@@ -196,7 +196,7 @@
 
     async function resetBot() {
       try {
-        const res = await fetch("http://127.0.0.1:5000/reset", { method: "POST" });
+        const res = await fetch("/manage", { method: "POST" });
         const data = await res.json();
         alert(data.message);
       } catch (err) {
@@ -205,7 +205,7 @@
     }
   async function loadStats() {
     try {
-      const res = await fetch("http://127.0.0.1:5000/stats");
+      const res = await fetch("/manage");
       const data = await res.json();
       document.getElementById("userCount").textContent = data.count;
     } catch (err) {
@@ -219,4 +219,5 @@
 
   </script>
 </body>
+
 </html
