@@ -327,7 +327,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         return await update.message.reply_text("⚠️ لا يوجد محتوى لهذا الخيار حالياً.")
 
-
 # تشغيل البوت
 def main():
     token = os.environ.get("BOT_TOKEN")
@@ -341,3 +340,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
