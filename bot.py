@@ -54,6 +54,7 @@ def save_content(data):
 def is_grade_enabled(grade: str) -> bool:
     content = load_content()
     return any(k.startswith(grade + ".") for k in content.keys())
+
 # إرسال المحتوى مع تخزين file_id (يدعم أكثر من ملف)
 async def send_payload(update: Update, payload: dict):
     txt = payload.get("text")
@@ -64,6 +65,7 @@ async def send_payload(update: Update, payload: dict):
     if lnk:
         await update.message.reply_text(str(lnk))
 
+    # إذا فيه file_id مخزن مسبقاً → أرسله مباشرة
     video_id = payload.get("video_id")
     document_id = payload.get("document_id")
     file_id = payload.get("file_id")
@@ -71,11 +73,15 @@ async def send_payload(update: Update, payload: dict):
     try:
         if video_id:
             await update.message.reply_video(video_id)
+            return None
         elif document_id:
             await update.message.reply_document(document_id)
+            return None
         elif file_id:
             await update.message.reply_document(file_id)
+            return None
         else:
+            # إذا ما فيه file_id → أرسل الملف المحلي وخزّن الـ file_id
             local = payload.get("file")
             if local:
                 files = local if isinstance(local, list) else [local]
@@ -84,56 +90,6 @@ async def send_payload(update: Update, payload: dict):
                         ext = os.path.splitext(path)[1].lower()
                         filename = os.path.basename(path)
 
-                        # ترقيم إذا فيه تكرار أسماء
-                        if files.count(path) > 1:
-                            filename = f"{os.path.splitext(filename)[0]}({idx}){ext}"
-
-                        if ext in [".mp4", ".mov", ".mkv"]:
-                            with open(path, "rb") as f:
-                                msg = await update.message.reply_video(f)
-                        elif ext in [".jpg", ".jpeg", ".png", ".gif"]:
-                            with open(path, "rb") as f:
-                                msg = await update.message.reply_photo(f)
-                        else:
-                            with open(path, "rb") as f:
-                                msg = await update.message.reply_document(InputFile(f, filename=filename))
-                    else:
-                        await update.message.reply_text(f"⚠️ الملف غير موجود: {path}")
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ تعذر إرسال الملف. السبب: {e}")
-
-    return None
-
-    txt = payload.get("text")
-    if txt:
-        await update.message.reply_text(str(txt))
-
-    lnk = payload.get("link")
-    if lnk:
-        await update.message.reply_text(str(lnk))
-
-    video_id = payload.get("video_id")
-    document_id = payload.get("document_id")
-    file_id = payload.get("file_id")
-
-    try:
-        if video_id:
-            await update.message.reply_video(video_id)
-        elif document_id:
-            await update.message.reply_document(document_id)
-        elif file_id:
-            await update.message.reply_document(file_id)
-        else:
-            local = payload.get("file")
-            if local:
-                # إذا كانت القيمة نص واحد نخليها قائمة فيها عنصر واحد
-                files = local if isinstance(local, list) else [local]
-                for idx, path in enumerate(files, start=1):
-                    if os.path.exists(path):
-                        ext = os.path.splitext(path)[1].lower()
-                        filename = os.path.basename(path)
-
-                        # إذا فيه تكرار بنفس الاسم نضيف ترقيم
                         if files.count(path) > 1:
                             filename = f"{os.path.splitext(filename)[0]}({idx}){ext}"
 
@@ -143,6 +99,12 @@ async def send_payload(update: Update, payload: dict):
                                 fid = msg.video.file_id if msg and msg.video else None
                                 if fid:
                                     return ("video_id", fid)
+                        elif ext in [".jpg", ".jpeg", ".png", ".gif"]:
+                            with open(path, "rb") as f:
+                                msg = await update.message.reply_photo(f)
+                                fid = msg.photo[-1].file_id if msg and msg.photo else None
+                                if fid:
+                                    return ("file_id", fid)
                         else:
                             with open(path, "rb") as f:
                                 msg = await update.message.reply_document(InputFile(f, filename=filename))
@@ -166,7 +128,7 @@ async def deliver_content(update: Update, key: str):
     result = await send_payload(update, payload)
     if result:
         id_kind, fid = result
-        # إذا كان المفتاح موجود مسبقاً كقائمة، أضف له
+        # خزّن الـ file_id في الـ JSON بشكل قائمة
         if id_kind in payload:
             if isinstance(payload[id_kind], list):
                 payload[id_kind].append(fid)
@@ -199,7 +161,7 @@ def kb_years():
         years = {"دورة 2024", "دورة 2023", "دورة 2022"}
     return kb(sorted(years))
 
-# بدء البوت مع تخزين المستخدمين (بدون أزرار الرجوع في صفحة الصفوف)
+# بدء البوت مع تخزين المستخدمين
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     users = load_users()
@@ -254,6 +216,7 @@ async def go_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(hist) == 5:
         key = ".".join(hist)
         return await deliver_content(update, key)
+
 # التعامل مع الرسائل
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -326,7 +289,6 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await deliver_content(update, tentative_key)
     else:
         return await update.message.reply_text("⚠️ لا يوجد محتوى لهذا الخيار حالياً.")
-
 # تشغيل البوت
 def main():
     token = os.environ.get("BOT_TOKEN")
