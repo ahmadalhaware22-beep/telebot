@@ -65,10 +65,18 @@ async def send_payload(update: Update, payload: dict):
     if lnk:
         await update.message.reply_text(str(lnk))
 
-    # إذا فيه file_id مخزن مسبقاً → أرسله مباشرة
+    # استخراج أول file_id إذا كان مخزن كقائمة
     video_id = payload.get("video_id")
+    if isinstance(video_id, list):
+        video_id = video_id[0]
+
     document_id = payload.get("document_id")
+    if isinstance(document_id, list):
+        document_id = document_id[0]
+
     file_id = payload.get("file_id")
+    if isinstance(file_id, list):
+        file_id = file_id[0]
 
     try:
         if video_id:
@@ -81,7 +89,6 @@ async def send_payload(update: Update, payload: dict):
             await update.message.reply_document(file_id)
             return None
         else:
-            # إذا ما فيه file_id → أرسل الملف المحلي وخزّن الـ file_id
             local = payload.get("file")
             if local:
                 files = local if isinstance(local, list) else [local]
@@ -118,6 +125,7 @@ async def send_payload(update: Update, payload: dict):
 
     return None
 
+
 async def deliver_content(update: Update, key: str):
     content = load_content()
     payload = content.get(key)
@@ -131,14 +139,17 @@ async def deliver_content(update: Update, key: str):
         # خزّن الـ file_id في الـ JSON بشكل قائمة
         if id_kind in payload:
             if isinstance(payload[id_kind], list):
-                payload[id_kind].append(fid)
+                if fid not in payload[id_kind]:
+                    payload[id_kind].append(fid)
             else:
-                payload[id_kind] = [payload[id_kind], fid]
+                if payload[id_kind] != fid:
+                    payload[id_kind] = [payload[id_kind], fid]
         else:
             payload[id_kind] = [fid]
 
         content[key] = payload
         save_content(content)
+
 
 # لوحات المفاتيح
 def kb(lst):
@@ -302,5 +313,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
