@@ -300,6 +300,14 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await deliver_content(update, tentative_key)
     else:
         return await update.message.reply_text("⚠️ لا يوجد محتوى لهذا الخيار حالياً.")
+# أمر إداري لعرض محتوى content.json
+async def debug_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    content = load_content()
+    # نحول المحتوى لنص منسق
+    text = json.dumps(content, ensure_ascii=False, indent=2)
+    # نرسله كملف نصي للمستخدم
+    await update.message.reply_document(InputFile.from_bytes(text.encode(), filename="content.json"))
+
 # تشغيل البوت
 def main():
     token = os.environ.get("BOT_TOKEN")
@@ -309,10 +317,12 @@ def main():
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
+    app.add_handler(CommandHandler("debug_content", debug_content))
     app.run_polling()
 
 if __name__ == "__main__":
     main()
+
 
 
 
