@@ -1,6 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup, InputFile
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 import json, os
+import io
 from pathlib import Path
 
 # مسار ملف الإعدادات
@@ -306,6 +307,7 @@ async def debug_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # نحول المحتوى لنص منسق
     text = json.dumps(content, ensure_ascii=False, indent=2)
     # نرسله كملف نصي للمستخدم
+    file_obj.name = "content.json"
     await update.message.reply_document(InputFile.from_bytes(text.encode(), filename="content.json"))
 
 # تشغيل البوت
@@ -322,6 +324,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
