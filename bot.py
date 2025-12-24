@@ -125,7 +125,6 @@ async def send_payload(update: Update, payload: dict):
         await update.message.reply_text(f"⚠️ تعذر إرسال الملف. السبب: {e}")
 
     return None
-
 async def deliver_content(update: Update, key: str):
     content = load_content()
     payload = content.get(key)
@@ -136,16 +135,17 @@ async def deliver_content(update: Update, key: str):
     result = await send_payload(update, payload)
     if result:
         id_kind, fid = result
-        # خزّن الـ file_id في الـ JSON بشكل قائمة
+        # خزّن الـ file_id بشكل ذكي (سلسلة أو قائمة)
         if id_kind in payload:
             if isinstance(payload[id_kind], list):
                 if fid not in payload[id_kind]:
                     payload[id_kind].append(fid)
             else:
+                # إذا القيمة القديمة مختلفة → حولها لقائمة
                 if payload[id_kind] != fid:
                     payload[id_kind] = [payload[id_kind], fid]
         else:
-            payload[id_kind] = [fid]
+            payload[id_kind] = fid  # أول مرة نخزن كسلسلة
 
         content[key] = payload
         save_content(content)
@@ -323,6 +323,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
