@@ -126,7 +126,6 @@ async def send_payload(update: Update, payload: dict):
 
     return None
 
-
 async def deliver_content(update: Update, key: str):
     content = load_content()
     payload = content.get(key)
@@ -324,6 +323,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
