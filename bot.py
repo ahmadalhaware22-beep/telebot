@@ -302,13 +302,13 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         return await update.message.reply_text("⚠️ لا يوجد محتوى لهذا الخيار حالياً.")
 # أمر إداري لعرض محتوى content.json
+
 async def debug_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
     content = load_content()
-    # نحول المحتوى لنص منسق
     text = json.dumps(content, ensure_ascii=False, indent=2)
-    # نرسله كملف نصي للمستخدم
+    file_obj = io.BytesIO(text.encode("utf-8"))
     file_obj.name = "content.json"
-    await update.message.reply_document(InputFile.from_bytes(text.encode(), filename="content.json"))
+    await update.message.reply_document(file_obj)
 
 # تشغيل البوت
 def main():
@@ -324,6 +324,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
