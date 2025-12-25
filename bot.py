@@ -80,6 +80,7 @@ async def send_payload(update: Update, payload: dict):
         file_id = file_id[0]
 
     try:
+        # أولاً: إذا عندنا file_id أو document_id أو video_id مخزن مسبقاً
         if video_id:
             await update.message.reply_video(video_id)
             return None
@@ -90,6 +91,7 @@ async def send_payload(update: Update, payload: dict):
             await update.message.reply_document(file_id)
             return None
         else:
+            # إذا ما فيه file_id مخزن، جرّب الملف المحلي
             local = payload.get("file")
             if local:
                 files = local if isinstance(local, list) else [local]
@@ -323,6 +325,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
