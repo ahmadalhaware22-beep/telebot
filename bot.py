@@ -23,6 +23,26 @@ UNITS_RANGE = range(1, 6)
 LESSONS_RANGE = range(1, 6)
 
 # تحميل/حفظ المستخدمين
+def kb(lst):
+    return ReplyKeyboardMarkup([[x] for x in lst] + [["🔙 رجوع", "⏮ العودة للبداية"]], resize_keyboard=True)
+
+def kb_units():
+    return ReplyKeyboardMarkup([[f"الوحدة {i}"] for i in UNITS_RANGE] + [["🔙 رجوع", "⏮ العودة للبداية"]], resize_keyboard=True)
+
+def kb_lessons(unit_txt):
+    return ReplyKeyboardMarkup([[f"الدرس {i}"] for i in LESSONS_RANGE] + [["🔙 رجوع", "⏮ العودة للبداية"]], resize_keyboard=True)
+
+def kb_years():
+    content = load_content()
+    years = set()
+    for k in content.keys():
+        parts = k.split(".")
+        if len(parts) >= 3 and parts[1] == "❓ أسئلة الدورات":
+            years.add(parts[2])
+    if not years:
+        years = {"دورة 2024", "دورة 2023", "دورة 2022"}
+    return kb(sorted(years))
+
 def load_users():
     if USERS_PATH.exists():
         with open(USERS_PATH, "r", encoding="utf-8") as f:
@@ -315,6 +335,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
