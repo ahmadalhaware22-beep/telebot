@@ -246,7 +246,6 @@ async def go_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             key = ".".join(hist)
             return await deliver_content(update, context, key)
-
 # التعامل مع الرسائل
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -296,29 +295,29 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(f"📖 اختر درس من {text}:", reply_markup=kb_lessons(text))
             elif parent == "📝 أوراق عمل":
                 key = ".".join(hist)
-                return await deliver_content(update, key)
+                return await deliver_content(update, context, key)
             return
         elif parent == "📚 كتب + دليل" and text in ["الكتاب", "الدليل"]:
             hist.append(text)
             context.user_data["history"] = hist
             key = ".".join(hist)
-            return await deliver_content(update, key)
+            return await deliver_content(update, context, key)
 
     if hist and len(hist) == 4 and hist[1] == "📘 شرح المنهاج" and text.startswith("الدرس"):
         hist.append(text)
         context.user_data["history"] = hist
         key = ".".join(hist)
-        return await deliver_content(update, key)
+        return await deliver_content(update, context, key)
 
     # التحقق النهائي: إذا فيه محتوى أو لا
     tentative_key = ".".join(hist + [text]) if hist else text
     payload = load_content().get(tentative_key)
-    
-if payload:
-    context.user_data["history"] = hist + [text] if hist else [text]
-    return await deliver_content(update, context, tentative_key)
-else:
-    return await update.message.reply_text("⚠️ لا يوجد محتوى لهذا الخيار حالياً.")
+
+    if payload:
+        context.user_data["history"] = hist + [text] if hist else [text]
+        return await deliver_content(update, context, tentative_key)
+    else:
+        return await update.message.reply_text("⚠️ لا يوجد محتوى لهذا الخيار حالياً.")
 
 # أمر إداري لعرض محتوى content.json
 
@@ -343,6 +342,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
