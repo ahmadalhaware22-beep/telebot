@@ -150,8 +150,7 @@ async def send_payload(update: Update, payload: dict):
         await update.message.reply_text(f"⚠️ تعذر إرسال الملف. السبب: {e}")
 
     return None
-
-async def deliver_content(update: Update, key: str):
+async def deliver_content(update: Update, context: ContextTypes.DEFAULT_TYPE, key: str):
     content = load_content()
     payload = content.get(key)
     if not payload:
@@ -174,7 +173,10 @@ async def deliver_content(update: Update, key: str):
         content[key] = payload
         save_content(content)
 
+    # ✅ استخدم context.user_data بدل update.message.chat_data
     hist = context.user_data.get("history", [])
+    context.user_data["history"] = hist  # تثبيت التاريخ بعد الإرسال
+
     if hist and len(hist) >= 4 and hist[1] == "📘 شرح المنهاج":
         unit = hist[3]
         await update.message.reply_text(
@@ -231,14 +233,19 @@ async def go_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"📖 اختر درس من {unit}:", reply_markup=kb_lessons(unit))
         elif parent == "📝 أوراق عمل":
             key = ".".join(hist)
-            return await deliver_content(update, key)
+            return await deliver_content(update, context, key)
         elif parent == "📚 كتب + دليل":
             await update.message.reply_text("📚 اختر: الكتاب أو الدليل", reply_markup=kb(["الكتاب", "الدليل"]))
         return
 
     if len(hist) == 5:
-        key = ".".join(hist)
-        return await deliver_content(update, key)
+        # ✅ بدل ما يعيد إرسال المحتوى، رجّع المستخدم لقائمة الدروس
+        if parent == "📘 شرح المنهاج":
+            unit = hist[3]
+            await update.message.reply_text(f"📖 اختر درس من {unit}:", reply_markup=kb_lessons(unit))
+        else:
+            key = ".".join(hist)
+            return await deliver_content(update, context, key)
 
 # التعامل مع الرسائل
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -306,12 +313,13 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # التحقق النهائي: إذا فيه محتوى أو لا
     tentative_key = ".".join(hist + [text]) if hist else text
     payload = load_content().get(tentative_key)
+    
+if payload:
+    context.user_data["history"] = hist + [text] if hist else [text]
+    return await deliver_content(update, context, tentative_key)
+else:
+    return await update.message.reply_text("⚠️ لا يوجد محتوى لهذا الخيار حالياً.")
 
-    if payload:
-        context.user_data["history"] = hist + [text] if hist else [text]
-        return await deliver_content(update, tentative_key)
-    else:
-        return await update.message.reply_text("⚠️ لا يوجد محتوى لهذا الخيار حالياً.")
 # أمر إداري لعرض محتوى content.json
 
 async def debug_content(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -335,6 +343,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
