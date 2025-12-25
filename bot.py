@@ -51,10 +51,11 @@ def save_content(data):
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# التحقق إذا الصف مفعل (فيه محتوى)
+# ✅ التحقق إذا الصف مفعل (فيه محتوى) – تعديل مهم
 def is_grade_enabled(grade: str) -> bool:
     content = load_content()
-    return any(k.startswith(grade + ".") for k in content.keys())
+    # بدل startswith → نقارن أول جزء من المفتاح
+    return any(k.split(".")[0] == grade for k in content.keys())
 
 # إرسال المحتوى مع تخزين file_id (يدعم أكثر من ملف)
 async def send_payload(update: Update, payload: dict):
@@ -127,7 +128,7 @@ async def send_payload(update: Update, payload: dict):
         await update.message.reply_text(f"⚠️ تعذر إرسال الملف. السبب: {e}")
 
     return None
-    #تتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتت
+
 async def deliver_content(update: Update, key: str):
     content = load_content()
     payload = content.get(key)
@@ -144,24 +145,23 @@ async def deliver_content(update: Update, key: str):
                 if fid not in payload[id_kind]:
                     payload[id_kind].append(fid)
             else:
-                # إذا القيمة القديمة مختلفة → حولها لقائمة
                 if payload[id_kind] != fid:
                     payload[id_kind] = [payload[id_kind], fid]
         else:
-            payload[id_kind] = fid  # أول مرة نخزن كسلسلة
+            payload[id_kind] = fid
 
         content[key] = payload
         save_content(content)
 
     # بعد إرسال المحتوى، أعد عرض نفس صفحة الدروس إذا كان السياق "شرح المنهاج"
-    hist = context.user_data.get("history", [])
+    hist = update.message.chat_data.get("history", [])
     if hist and len(hist) >= 4 and hist[1] == "📘 شرح المنهاج":
         unit = hist[3]
         await update.message.reply_text(
             f"📖 اختر درس من {unit}:",
             reply_markup=kb_lessons(unit)
         )
-
+        
 # بدء البوت مع تخزين المستخدمين
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -313,6 +313,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
