@@ -174,7 +174,7 @@ async def deliver_content(update: Update, key: str):
         content[key] = payload
         save_content(content)
 
-    hist = update.message.chat_data.get("history", [])
+    hist = context.user_data.get("history", [])
     if hist and len(hist) >= 4 and hist[1] == "📘 شرح المنهاج":
         unit = hist[3]
         await update.message.reply_text(
@@ -335,6 +335,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
