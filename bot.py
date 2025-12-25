@@ -127,6 +127,7 @@ async def send_payload(update: Update, payload: dict):
         await update.message.reply_text(f"⚠️ تعذر إرسال الملف. السبب: {e}")
 
     return None
+    #تتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتتت
 async def deliver_content(update: Update, key: str):
     content = load_content()
     payload = content.get(key)
@@ -152,27 +153,14 @@ async def deliver_content(update: Update, key: str):
         content[key] = payload
         save_content(content)
 
-
-# لوحات المفاتيح
-def kb(lst):
-    return ReplyKeyboardMarkup([[x] for x in lst] + [["🔙 رجوع", "⏮ العودة للبداية"]], resize_keyboard=True)
-
-def kb_units():
-    return ReplyKeyboardMarkup([[f"الوحدة {i}"] for i in UNITS_RANGE] + [["🔙 رجوع", "⏮ العودة للبداية"]], resize_keyboard=True)
-
-def kb_lessons(unit_txt):
-    return ReplyKeyboardMarkup([[f"الدرس {i}"] for i in LESSONS_RANGE] + [["🔙 رجوع", "⏮ العودة للبداية"]], resize_keyboard=True)
-
-def kb_years():
-    content = load_content()
-    years = set()
-    for k in content.keys():
-        parts = k.split(".")
-        if len(parts) >= 3 and parts[1] == "❓ أسئلة الدورات":
-            years.add(parts[2])
-    if not years:
-        years = {"دورة 2024", "دورة 2023", "دورة 2022"}
-    return kb(sorted(years))
+    # بعد إرسال المحتوى، أعد عرض نفس صفحة الدروس إذا كان السياق "شرح المنهاج"
+    hist = context.user_data.get("history", [])
+    if hist and len(hist) >= 4 and hist[1] == "📘 شرح المنهاج":
+        unit = hist[3]
+        await update.message.reply_text(
+            f"📖 اختر درس من {unit}:",
+            reply_markup=kb_lessons(unit)
+        )
 
 # بدء البوت مع تخزين المستخدمين
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -325,6 +313,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
