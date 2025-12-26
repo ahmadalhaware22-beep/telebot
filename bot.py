@@ -247,6 +247,7 @@ async def go_back(update: Update, context: ContextTypes.DEFAULT_TYPE):
             key = ".".join(hist)
             return await deliver_content(update, context, key)
 # التعامل مع الرسائل
+# التعامل مع الرسائل
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     hist = context.user_data.get("history", [])
@@ -303,11 +304,18 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             key = ".".join(hist)
             return await deliver_content(update, context, key)
 
+    # ✅ التعديل هنا: زر الدرس يرسل المحتوى ويرجع مباشرة لقائمة الدروس
     if hist and len(hist) == 4 and hist[1] == "📘 شرح المنهاج" and text.startswith("الدرس"):
         hist.append(text)
         context.user_data["history"] = hist
         key = ".".join(hist)
-        return await deliver_content(update, context, key)
+        await deliver_content(update, context, key)
+
+        # بعد الإرسال مباشرة رجّع المستخدم لقائمة الدروس
+        unit = hist[3]
+        hist.pop()  # نحذف الدرس من التاريخ حتى يقدر يضغطه مرة ثانية
+        context.user_data["history"] = hist
+        return await update.message.reply_text(f"📖 اختر درس من {unit}:", reply_markup=kb_lessons(unit))
 
     # التحقق النهائي: إذا فيه محتوى أو لا
     tentative_key = ".".join(hist + [text]) if hist else text
@@ -342,6 +350,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
