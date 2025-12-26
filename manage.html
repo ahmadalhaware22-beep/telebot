@@ -129,34 +129,35 @@
         document.getElementById("examYearField").style.display = "block";
       }
     }
+function buildKey() {
+  const grade = document.getElementById("grade").value;
+  const mainOption = document.getElementById("mainOption").value;
+  const section = document.getElementById("section").value;
+  const unit = document.getElementById("unit").value;
+  const lesson = document.getElementById("lesson").value;
+  const bookGuide = document.getElementById("bookGuide").value;
+  const examYear = document.getElementById("examYear").value;
 
-    function buildKey() {
-      const grade = document.getElementById("grade").value;
-      const mainOption = document.getElementById("mainOption").value;
-      const section = document.getElementById("section").value;
-      const unit = document.getElementById("unit").value;
-      const lesson = document.getElementById("lesson").value;
-      const bookGuide = document.getElementById("bookGuide").value;
-      const examYear = document.getElementById("examYear").value;
+  let keyParts = [grade, mainOption];
 
-      let keyParts = [grade, mainOption];
+  if (mainOption === "📘 شرح المنهاج") {
+    keyParts.push(section);
+    if (unit) keyParts.push(`الوحدة ${unit}`);
+    if (lesson) keyParts.push(`الدرس ${lesson}`);
+  } else if (mainOption === "📝 أوراق عمل") {
+    keyParts.push(section);
+    if (unit) keyParts.push(`الوحدة ${unit}`);
+  } else if (mainOption === "📚 كتب + دليل") {
+    keyParts.push(section);
+    keyParts.push(bookGuide);
+  } else if (mainOption === "❓ أسئلة الدورات") {
+    if (examYear) keyParts.push(examYear);
+    // لاحظ هون: ما عم نضيف section أبداً
+  }
 
-      if (mainOption === "📘 شرح المنهاج") {
-        keyParts.push(section);
-        if (unit) keyParts.push(`الوحدة ${unit}`);
-        if (lesson) keyParts.push(`الدرس ${lesson}`);
-      } else if (mainOption === "📝 أوراق عمل") {
-        keyParts.push(section);
-        if (unit) keyParts.push(`الوحدة ${unit}`);
-      } else if (mainOption === "📚 كتب + دليل") {
-        keyParts.push(section);
-        keyParts.push(bookGuide);
-      } else if (mainOption === "❓ أسئلة الدورات") {
-        if (examYear) keyParts.push(examYear);
-      }
+  return keyParts.join(".");
+}
 
-      return keyParts.join(".");
-    }
 
     async function submitContent() {
       const key = buildKey();
@@ -220,4 +221,5 @@
   </script>
 </body>
 
-</html
+</html>
+
